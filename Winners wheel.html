@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>ELEVATE DMC - Winner Wheel</title>
+<style>
+  body { 
+    font-family: Arial, sans-serif; 
+    text-align: center; 
+    margin: 30px; 
+    background: #f8f9fa; 
+  }
+  h1 { 
+    color: #A6401A; /* Elevate orange */ 
+  }
+  textarea { 
+    width: 40%; 
+    height: 150px; 
+    margin: 10px; 
+    padding: 10px; 
+    border: 1px solid #ccc; 
+    border-radius: 6px; 
+    font-size: 14px;
+  }
+  button {
+    padding: 10px 20px;
+    background-color: #A6401A;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    margin: 10px;
+    font-size: 14px;
+  }
+  button:hover { background-color: #7a2f14; }
+  #result { 
+    margin-top: 20px; 
+    font-size: 18px; 
+    font-weight: bold; 
+    color: #333; 
+  }
+  .winner { 
+    color: green; 
+    margin: 5px 0; 
+  }
+  #exportBtn {
+    display: none;
+  }
+  /* Floating reset button */
+  #resetBtn {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    background-color: #A6401A;
+    padding: 12px 20px;
+    border-radius: 50px;
+    font-size: 14px;
+    z-index: 1000;
+  }
+</style>
+</head>
+<body>
+
+<h1>Winner Wheel</h1>
+<div>
+  <textarea id="names" placeholder="Enter names, one per line"></textarea>
+  <textarea id="prizes" placeholder="Enter prizes, one per line"></textarea>
+</div>
+<button id="spinBtn">🎡 Spin the Wheel</button>
+<button id="exportBtn">📥 Download Winners List</button>
+
+<div id="result"></div>
+<h2>Winners</h2>
+<div id="winnersList"></div>
+
+<!-- Reset button moved to bottom right -->
+<button id="resetBtn">🔄 Reset</button>
+
+<script>
+let names = [];
+let prizes = [];
+let winners = [];
+
+function loadLists() {
+  names = document.getElementById("names").value.trim().split("\n").filter(x => x);
+  prizes = document.getElementById("prizes").value.trim().split("\n").filter(x => x);
+  winners = [];
+  document.getElementById("winnersList").innerHTML = "";
+  document.getElementById("result").innerHTML = "";
+  document.getElementById("exportBtn").style.display = "none";
+}
+
+document.getElementById("spinBtn").addEventListener("click", () => {
+  // Load names/prizes if arrays are empty (first spin)
+  if (names.length === 0 && prizes.length === 0) {
+    loadLists();
+  }
+
+  if (names.length === 0 || prizes.length === 0) {
+    alert("All prizes have been used! You can now download the winners list.");
+    document.getElementById("exportBtn").style.display = "inline-block";
+    return;
+  }
+
+  // pick random index
+  const nameIndex = Math.floor(Math.random() * names.length);
+  const prizeIndex = Math.floor(Math.random() * prizes.length);
+  const chosenName = names.splice(nameIndex, 1)[0];
+  const chosenPrize = prizes.splice(prizeIndex, 1)[0];
+
+  const pair = `${chosenName} 🏆 ${chosenPrize}`;
+  winners.push({ name: chosenName, prize: chosenPrize });
+
+  document.getElementById("result").innerHTML = `🎉 Winner: ${pair}`;
+  document.getElementById("winnersList").innerHTML += `<div class="winner">${pair}</div>`;
+
+  // Update textareas so removed items disappear
+  document.getElementById("names").value = names.join("\n");
+  document.getElementById("prizes").value = prizes.join("\n");
+
+  // Show export button if finished
+  if (prizes.length === 0 || names.length === 0) {
+    document.getElementById("exportBtn").style.display = "inline-block";
+  }
+});
+
+document.getElementById("resetBtn").addEventListener("click", () => {
+  loadLists();
+});
+
+// Export winners list to CSV
+document.getElementById("exportBtn").addEventListener("click", () => {
+  if (winners.length === 0) {
+    alert("No winners to export!");
+    return;
+  }
+  let csv = "Name,Prize\n";
+  winners.forEach(w => {
+    csv += `"${w.name}","${w.prize}"\n`;
+  });
+  const blob = new Blob([csv], { type: "text/csv" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "winners_list.csv";
+  a.click();
+});
+</script>
+</body>
+</html>
